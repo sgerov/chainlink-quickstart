@@ -1,0 +1,38 @@
+version: "3"
+services:
+  db:
+    image: "postgres"
+    container_name: "chainlink-postgres"
+    environment:
+      - POSTGRES_USER=chainlink
+      - POSTGRES_PASSWORD=chainlink
+      - POSTGRES_DB=chainlink
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  node:
+    image: "smartcontract/chainlink:0.9.4"
+    container_name: "chainlink-node"
+    volumes:
+      - ./.api:/chainlink/.api
+      - ./.password:/chainlink/.password
+    ports:
+      - "6688:6688"
+    environment:
+      - ROOT=/chainlink
+      - LOG_LEVEL=debug
+      - ETH_CHAIN_ID=42
+      - MIN_OUTGOING_CONFIRMATIONS=2
+      - LINK_CONTRACT_ADDRESS=0xa36085F69e2889c224210F603D836748e7dC0088
+      - CHAINLINK_TLS_PORT=0
+      - SECURE_COOKIES=false
+      - GAS_UPDATER_ENABLED=true
+      - ALLOW_ORIGINS=*
+      - ETH_URL=wss://kovan.infura.io/ws/v3/<PROJECT_ID>
+      - DATABASE_URL=postgresql://chainlink:chainlink@db:5432/chainlink?sslmode=disable
+    command: "local n -p /chainlink/.password -a /chainlink/.api"
+    depends_on:
+      - db
+volumes:
+  postgres-data:
